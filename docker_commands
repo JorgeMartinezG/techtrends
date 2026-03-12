@@ -1,0 +1,45 @@
+
+# Step 2 - Docker for Application Packaging
+
+docker build -f ./Dockerfile -t techtrends .
+
+docker run -d --name techtrends_app -p 7111:3111 techtrends
+
+docker ps
+
+curl http://127.0.0.1:7111/
+curl http://127.0.0.1:7111/healthz
+curl http://127.0.0.1:7111/metrics
+
+docker logs techtrends_app
+
+
+techtrends$ docker logs techtrends_app
+ * Serving Flask app 'app' (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+03/12/2026, 11:57:05 WARNING:werkzeug: * Running on all addresses.
+   WARNING: This is a development server. Do not use it in a production deployment.
+03/12/2026, 11:57:05 INFO:werkzeug: * Running on http://172.17.0.2:3111/ (Press CTRL+C to quit)
+03/12/2026, 11:57:38 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 11:57:38] "GET /healthz HTTP/1.1" 200 -
+03/12/2026, 11:57:38 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 11:57:38] "GET /metrics HTTP/1.1" 200 -
+03/12/2026, 11:57:38 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 11:57:38] "GET / HTTP/1.1" 200 -
+03/12/2026, 11:57:41 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 11:57:41] "GET / HTTP/1.1" 200 -
+03/12/2026, 11:57:41 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 11:57:41] "GET /static/css/main.css HTTP/1.1" 200 -
+03/12/2026, 11:57:41 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 11:57:41] "GET /favicon.ico HTTP/1.1" 404 -
+03/12/2026, 11:57:58 INFO:app:Article "2020 CNCF Annual Report" retrieved
+03/12/2026, 11:57:58 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 11:57:58] "GET /1 HTTP/1.1" 200 -
+03/12/2026, 11:57:58 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 11:57:58] "GET /static/css/main.css HTTP/1.1" 304 -
+03/12/2026, 12:04:41 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 12:04:41] "GET /metrics HTTP/1.1" 200 -
+03/12/2026, 12:05:14 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 12:05:14] "GET /metrics HTTP/1.1" 200 -
+03/12/2026, 12:05:18 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 12:05:18] "GET / HTTP/1.1" 200 -
+03/12/2026, 12:05:18 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 12:05:18] "GET /static/css/main.css HTTP/1.1" 304 -
+03/12/2026, 12:05:26 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 12:05:26] "GET / HTTP/1.1" 200 -
+03/12/2026, 12:05:26 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 12:05:26] "GET /static/css/main.css HTTP/1.1" 304 -
+03/12/2026, 12:05:50 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 12:05:50] "GET /home HTTP/1.1" 404 -
+03/12/2026, 12:05:55 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 12:05:55] "GET /Home HTTP/1.1" 404 -
+03/12/2026, 12:05:58 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 12:05:58] "GET /crete HTTP/1.1" 404 -
+03/12/2026, 12:06:04 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 12:06:04] "GET /create HTTP/1.1" 200 -
+03/12/2026, 12:06:05 INFO:werkzeug:172.17.0.1 - - [12/Mar/2026 12:06:05] "GET /static/css/main.css HTTP/1.1" 304 -
