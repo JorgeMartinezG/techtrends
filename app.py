@@ -1,28 +1,80 @@
 import sqlite3
+import logging
+import sys
 
-from flask import Flask, jsonify, json, render_template, request, url_for, redirect, flash
-from werkzeug.exceptions import abort
+from flask import Flask, jsonify, render_template, request, url_for, redirect, flash
 
-# Function to get a database connection.
-# This function connects to database with the name `database.db`
+# ------------------------------------------------------------
+# Logging configuration (STDOUT + timestamp + DEBUG)
+# ------------------------------------------------------------
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s:%(name)s:%(message)s",
+    datefmt="%m/%d/%Y, %H:%M:%S",
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+
+logging.getLogger("werkzeug").setLevel(logging.INFO)
+
+# ------------------------------------------------------------
+# Metrics counter
+# ------------------------------------------------------------
+db_connection_count = 0
+
+# ------------------------------------------------------------
+# Database helpers
+# ------------------------------------------------------------
 def get_db_connection():
+    global db_connection_count
+    db_connection_count += 1
+
     connection = sqlite3.connect('database.db')
     connection.row_factory = sqlite3.Row
     return connection
 
-# Function to get a post using its ID
+
 def get_post(post_id):
     connection = get_db_connection()
-    post = connection.execute('SELECT * FROM posts WHERE id = ?',
-                        (post_id,)).fetchone()
+    post = connection.execute(
+        'SELECT * FROM posts WHERE id = ?',
+        (post_id,)
+    ).fetchone()
     connection.close()
     return post
 
-# Define the Flask application
+
+# ------------------------------------------------------------
+# Flask app
+# ------------------------------------------------------------
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your secret key'
 
-# Define the main route of the web application 
+# ------------------------------------------------------------
+# Healthcheck endpoint
+# ------------------------------------------------------------
+@app.route('/healthz')
+def healthz():
+    return jsonify(result="OK - healthy"), 200
+
+
+# ------------------------------------------------------------
+# Metrics endpoint
+# ------------------------------------------------------------
+@app.route('/metrics')
+def metrics():
+    connection = get_db_connection()
+    post_count = connection.execute('SELECT COUNT(*) FROM posts').fetchone()[0]
+    connection.close()
+
+    return jsonify(
+        db_connection_count=db_connection_count,
+        post_count=post_count
+    ), 200
+
+
+# ------------------------------------------------------------
+# Main routes
+# ------------------------------------------------------------
 @app.route('/')
 def index():
     connection = get_db_connection()
@@ -30,22 +82,24 @@ def index():
     connection.close()
     return render_template('index.html', posts=posts)
 
-# Define how each individual article is rendered 
-# If the post ID is not found a 404 page is shown
+
 @app.route('/<int:post_id>')
 def post(post_id):
     post = get_post(post_id)
     if post is None:
-      return render_template('404.html'), 404
+        app.logger.warning(f"Article with id {post_id} not found (404)")
+        return render_template('404.html'), 404
     else:
-      return render_template('post.html', post=post)
+        app.logger.info(f'Article "{post["title"]}" retrieved')
+        return render_template('post.html', post=post)
 
-# Define the About Us page
+
 @app.route('/about')
 def about():
+    app.logger.info("About page retrieved")
     return render_template('about.html')
 
-# Define the post creation functionality 
+
 @app.route('/create', methods=('GET', 'POST'))
 def create():
     if request.method == 'POST':
@@ -56,40 +110,21 @@ def create():
             flash('Title is required!')
         else:
             connection = get_db_connection()
-            connection.execute('INSERT INTO posts (title, content) VALUES (?, ?)',
-                         (title, content))
+            connection.execute(
+                'INSERT INTO posts (title, content) VALUES (?, ?)',
+                (title, content)
+            )
             connection.commit()
             connection.close()
 
+            app.logger.info(f'New article "{title}" created')
             return redirect(url_for('index'))
 
     return render_template('create.html')
 
-# start the application on port 3111
+
+# ------------------------------------------------------------
+# Start application
+# ------------------------------------------------------------
 if __name__ == "__main__":
-   app.run(host='0.0.0.0', port='3111')
-
-@app.route('/healthz')
-def healthz():
-    return jsonify(result="ok"), 200
-
-@app.route('/status')
-def status():
-    try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        cursor.execute('SELECT COUNT(*) FROM posts')
-        posts_count = cursor.fetchone()[0]
-        connection.close()
-
-        return jsonify(
-            result="ok",
-            posts=posts_count,
-            app_version="1.0.0"
-        ), 200
-
-    except Exception as e:
-        return jsonify(
-            result="error",
-            message=str(e)
-        ), 500
+    app.run(host='0.0.0.0', port=3111)

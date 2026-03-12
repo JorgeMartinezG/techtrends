@@ -1,0 +1,17 @@
+namespace: prod
+
+replicaCount: 5
+
+image:
+  pullPolicy: Always
+
+service:
+  port: 7111
+
+resources:
+  requests:
+    memory: 128Mi
+    cpu: 350m
+  limits:
+    memory: 256Mi
+    cpu: 500m
