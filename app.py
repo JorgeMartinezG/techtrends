@@ -68,3 +68,28 @@ def create():
 # start the application on port 3111
 if __name__ == "__main__":
    app.run(host='0.0.0.0', port='3111')
+
+@app.route('/healthz')
+def healthz():
+    return jsonify(result="ok"), 200
+
+@app.route('/status')
+def status():
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute('SELECT COUNT(*) FROM posts')
+        posts_count = cursor.fetchone()[0]
+        connection.close()
+
+        return jsonify(
+            result="ok",
+            posts=posts_count,
+            app_version="1.0.0"
+        ), 200
+
+    except Exception as e:
+        return jsonify(
+            result="error",
+            message=str(e)
+        ), 500
