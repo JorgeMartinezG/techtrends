@@ -5,14 +5,35 @@ import sys
 from flask import Flask, jsonify, render_template, request, url_for, redirect, flash
 
 # ------------------------------------------------------------
-# Logging configuration (STDOUT + timestamp + DEBUG)
+# Logging configuration (STDOUT + STDERR + timestamp + DEBUG)
+# - DEBUG/INFO/WARNING -> STDOUT
+# - ERROR/CRITICAL     -> STDERR
 # ------------------------------------------------------------
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s %(levelname)s:%(name)s:%(message)s",
-    datefmt="%m/%d/%Y, %H:%M:%S",
-    handlers=[logging.StreamHandler(sys.stdout)]
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+log_format = logging.Formatter(
+    fmt="%(asctime)s %(levelname)s:%(name)s:%(message)s",
+    datefmt="%m/%d/%Y, %H:%M:%S"
 )
+
+stdout_handler = logging.StreamHandler(sys.stdout)
+stdout_handler.setLevel(logging.DEBUG)
+stdout_handler.setFormatter(log_format)
+stdout_handler.addFilter(lambda record: record.levelno < logging.ERROR)
+
+stderr_handler = logging.StreamHandler(sys.stderr)
+stderr_handler.setLevel(logging.ERROR)
+stderr_handler.setFormatter(log_format)
+
+# Avoid duplicate handlers if reloaded
+if not logger.handlers:
+    logger.addHandler(stdout_handler)
+    logger.addHandler(stderr_handler)
+else:
+    logger.handlers = []
+    logger.addHandler(stdout_handler)
+    logger.addHandler(stderr_handler)
 
 logging.getLogger("werkzeug").setLevel(logging.INFO)
 
@@ -87,7 +108,8 @@ def index():
 def post(post_id):
     post = get_post(post_id)
     if post is None:
-        app.logger.warning(f"Article with id {post_id} not found (404)")
+        # ERROR -> STDERR (required by reviewer)
+        app.logger.error(f"Article with id {post_id} not found (404)")
         return render_template('404.html'), 404
     else:
         app.logger.info(f'Article "{post["title"]}" retrieved')
