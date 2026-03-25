@@ -3,6 +3,8 @@ namespace: prod
 replicaCount: 5
 
 image:
+  repository: jorgemartinez/techtrends
+  tag: latest
   pullPolicy: Always
 
 service:
