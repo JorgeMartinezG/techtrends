@@ -3,7 +3,7 @@ namespace: prod
 replicaCount: 3
 
 image:
-  repository: jorgemartinez/techtrends
+  repository: jorgemartinezg/techtrends
   tag: latest
   pullPolicy: Always
 
