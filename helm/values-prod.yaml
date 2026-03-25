@@ -1,6 +1,6 @@
 namespace: prod
 
-replicaCount: 5
+replicaCount: 3
 
 image:
   repository: jorgemartinez/techtrends
@@ -8,12 +8,12 @@ image:
   pullPolicy: Always
 
 service:
-  port: 7111
+  port: 5111
 
 resources:
   requests:
-    memory: 128Mi
-    cpu: 350m
+    memory: 90Mi
+    cpu: 300m
   limits:
-    memory: 256Mi
+    memory: 128Mi
     cpu: 500m
