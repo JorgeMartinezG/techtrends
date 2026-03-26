@@ -18,6 +18,10 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 6111, host: 6111
   config.vm.network "forwarded_port", guest: 6112, host: 6112
 
+  # ArgoCD UI (desde el host del lab)
+  config.vm.network "forwarded_port", guest: 30188, host: 8080, host_ip: "127.0.0.1", auto_correct: true
+  config.vm.network "forwarded_port", guest: 31728, host: 8443, host_ip: "127.0.0.1", auto_correct: true
+
   # Set the static IP for the vagrant box
   config.vm.network "private_network", ip: "192.168.50.4"
   
